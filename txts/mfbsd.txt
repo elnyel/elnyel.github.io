@@ -1,0 +1,573 @@
+------------------ prompts
+
+set prompt = "%B[%n@%m %~]%# "
+
+
+
+    %B Starts/stops boldfacing mode
+    %n is the username
+    %m is the host
+    %~ is the path
+    %# is the prompt ($ for normal users and # for root)
+
+
+
+
+/*/*/*/*
+
+
+COLORIDO: set prompt="%{\e[31;1m%}%n%{\e[37m%}@%{\e[31;1m%}%m%{\e[37m%}:%{\e[32;1m%}%C%{\e[37m%} "\$"%{\e[0m%} "
+
+
+	set prompt = "%N@%m:%~ %# "
+	set promptchars = "%#"
+
+
+
++----------------- desligador
+
+root@pnX:/ # cat /usr/sbin/tmbp 
+#!/bin/sh
+
+echo -e "deseja mesmo desligar?\n1 - sim\n2 - nao\n =D"
+read opcao
+if [ $opcao = "1" ]
+ then
+	echo "tchau !"
+killall firefox
+killall mousepad
+killall chrome 
+
+
+	shutdown -p now
+	
+elif [ $opcao = "2" ]
+ then
+		echo "ok, show!"
+	else
+		echo "ta doidao, ne?!"
+
+	fi
+
+
+
++----------------- check memoria
+
+diversas possibilidades
+
+$ sysctl hw.physmem
+$ sysctl hw | egrep 'hw.(phys|user|real)'
+$ grep memory /var/run/dmesg.boot 
+
+# pkg install freecolor
+$ freecolor -m -o
+$ freecolor
+
+			-b     Display the amount of memory in bytes.
+ 
+			-k     Display the amount of memory in kilobytes.  This is the default.
+			-m     Display the amount of memory in megabytes.
+			-o     Display the output in old format, the only difference being this
+             option will disable the display of the "buffer adjusted" line.
+			-s     Continuously display the result delay seconds  apart.   You  may
+              actually  specify any floating point number for delay, usleep(3)
+             is used for microsecond resolution delay times.
+			-t     Display a line showing the column totals.
+			-V     Display version information.
+
++-------------------- xfce abrindo programas sozinho
+
+Bastou fechar a sessao aberta com o xfce4-session-settings, seguem outras dicas:
+
+
+    Checked the .desktop files in both /usr/share/applications & /.local/share/applications
+    
+    Checked xinitrc in /ect/xdg/ for terminal startup. A change here resolved an issue with both xfce & gnome screensavers running simultaneously, but did nothing for the terminal issue.
+    
+    Checked Application Autostart in xfce4-session-settings, but there's no default terminal entry. When I add one, two terminal windows pop up on startup.
+
+
+
+
+
+You can just create a *.desktop file add it to autostart directory -
+
+nano ~/.config/autostart/app.desktop
+
+[Desktop Entry]
+Type=Application
+Name=app
+Exec=app 
+StartupNotify=false
+Terminal=false
+
+
+
+
++------------------- bash no freebsd
+iniciar o modulo para 64b, caso contrario o erro ELF binary type "0" not known.
+pode aparecer
+
+# kldload linux64   
+# pkg install bash
+
+para fixar:
+
+
+root@pnX:/home/pnmx/Desktop/codes # sysrc -f /boot/loader.conf linux64_load="YES"
+linux64_load:  -> YES
+root@pnX:/home/pnmx/Desktop/codes # cat /boot/loader.conf
+fuse_load="YES"
+vboxdrv_load="YES"
+if_bridge_load="YES"
+if_tap_load="YES"
+linux64_load="YES"
+
+
+
++------------------- aterm
+
+pkg install aterm
+kldload pty
+echo "pty_load=\"YES\"" > /boot/loader.conf
+(OBS: TESTAR... nao testado no loader nem /etc/rc.conf)
+
++------------------ desinstalar via ports
+
+ # make deinstall install clean
+
+
++------------------ LIBREOFFICE com erro para salvar
+
+alterar a variavel TMP para /tmp
+
+setenv TMP /tmp
+
+mas como o ideal eh que fique eternizada:
+
+# cd ~
+# echo "TMP=/tmp" >> .profile
+
+Salvar no .profile vai fazer com que permaneca e assim o 
+libreoffice mantenha a leitura correta da variavel.
+
+
+
++-------------------- virtualbox bridge
+
+freebsd virtualbox
+para o guest ter internet: ativar bridge + nat nas propriedades de rede
+
+_host_
+
+ 1013	18:42	ifconfig bridge create
+  1014	18:42	ifconfig bridge0
+  1015	18:42	ifconfig bridge0 inet 192.168.0.1/24
+  1020	18:44	ifconfig bridge0 addm em0
+
+OBS:  em0=interface do host que vai fazer parte da bridge
+nas configuracoes do guest, procurar por placa de rede que habilite le0. Usando em1 nao funcionou
+em=intel
+  
+  
+  https://forums.virtualbox.org/viewtopic.php?f=40&t=88353
+  
+  root@pnX:/home/pnmx # /etc/netstart
+
+
+_guest_
+
+root@fc:/usr/local/www/apache24/data # cat /etc/rc.conf
+hostname="fc"
+keymap="br.kbd"
+ifconfig_em0="DHCP"
+sshd_enable="YES"
+# Set dumpdev to "AUTO" to enable crash dumps, "NO" to disable
+dumpdev="AUTO"
+#ifconfig_le0="DHCP"	
+ifconfig_le0="inet 192.168.0.113 netmask 255.255.255.0"
+#defaultrouter="192.168.0.1"
+#static_routes="gateway default"
+#route_gateway"-host 192.168.0.1 -interface le0"
+route_default="default 192.168.0.1"
+root@fc:/usr/local/www/apache24/data # 
+
+
+
+
+
+CASO O MYSQL DE ERRO
+
+service mysql-server onestart
+ou
+service mysql-server start
+
+caso de erro...
+
+“do you already have another mysqld server running on socket: /var/run/mysql/mysql.sock ?”
+
+alterar as permissoes:
+
+#chown mysql /var/run/mysql
+
+service mysql-server onestart
+service mysql-server status
+mysql is running as pid XXXX.
+http://securityf2.com/kellys-mysql-quick-tutorial/
+
+INSTALADOS via pkg
+apache
+mariadb
+nextcloud
+
+arquivos
+root@fc:/usr/local/www/apache24 # 
+
+/usr/local/etc/apache24   - httpd.conf
+
+
+
+https://www.digitalocean.com/community/tutorials/como-instalar-uma-pilha-apache-mysql-e-php-famp-no-freebsd-10-1-pt
+
+
+TUTO GERAL: https://ramsdenj.com/2017/06/05/nextcloud-in-a-jail-on-freebsd.html
+
+
+GUEST RC.CONF para nextcloud
+
+root@fc:/root $ cat /etc/rc.conf
+hostname="fc"
+keymap="br.kbd"
+ifconfig_em0="DHCP"
+sshd_enable="YES"
+# Set dumpdev to "AUTO" to enable crash dumps, "NO" to disable
+dumpdev="AUTO"
+#ifconfig_le0="DHCP"	
+ifconfig_le0="inet 192.168.0.113 netmask 255.255.255.0"
+#defaultrouter="192.168.0.1"
+#static_routes="gateway default"
+#route_gateway"-host 192.168.0.1 -interface le0"
+route_default="default 192.168.0.1"
+mysql_enable="YES"
+mysql_args="--bind-address=127.0.0.1"
+apache24_enable="YES"
+
+
+
+
+
+
+
+
++------------- steam + netflix = saga
+
+# kldload linux
+# kldload linux64
+
+
+TERMINAR.
+
++------------- virtualbox????
+pkg search virtualbox
+pkg install virtualbox-versao
+
+obs: caso de erro ao carregar imagens...
+
+# kldunload vboxnetflt
+# kldunload vboxdrv
+# kldload vboxdrv # pode adicionar vboxdrv_load="YES" ao /etc/loader.conf
+# kldload vboxnetflt # pdoe adicionar vboxnet_enable="YES" ao /etc/rc.conf
+
++-------------- aplicando patches de seguranca
+
+
+# freebsd-update fetch
+# freebsd-update install
+# shutdown -r +10min "Rebooting for a security update"
+
+
++------------- opcoes de seguranca pos instalacao
+
+script
+/usr/src/usr.sbin/bsdinstall/scripts/hardening
+
++-------------- usb stick ntfs
+
+kldload fuse   - carrega o fuse
+para permanecer, adicionar:
+
+    [ fuse_load="YES" ]
+
+    /boot/loader.conf  * adicionando somente ao rc.conf nao funcionou.
+    /etc/rc.conf
+
+caso nao exista, instalar:
+
+# pkg install fusefs-ntfs
+
+procurar o dispositivo:
+
+# gpart show
+# gpart show /dev/da0
+# usbconfig list
+# camcontrol devlist
+
+# ntfs-3g /dev/da0s1 /mnt/
+# umount /mnt
+
+Melhorado:
+
+root@pnX:/home/pnmx # camcontrol devlist
+<TOSHIBA MK1655GSX FG011J>         at scbus0 target 0 lun 0 (pass0,ada0)
+<KINGSTON SA400S37480G SBFKB1D1>   at scbus1 target 0 lun 0 (pass1,ada1)
+<SanDisk Cruzer Blade 1.00>        at scbus4 target 0 lun 0 (da0,pass2)
+
+
+root@pnX:/home/pnmx # gpart list da0
+Geom name: da0
+modified: false
+state: OK
+fwheads: 255
+fwsectors: 63
+last: 30595071
+first: 63
+entries: 4
+scheme: MBR
+Providers:
+1. Name: da0s1
+   Mediasize: 15662579712 (15G)
+   Sectorsize: 512
+   Stripesize: 0
+   Stripeoffset: 1048576
+   Mode: r0w0e0
+   efimedia: HD(1,MBR,0x90909090,0x800,0x1d2c800)
+   rawtype: 7
+   length: 15662579712
+   offset: 1048576
+   type: ntfs
+   index: 1
+   end: 30593023
+   start: 2048
+Consumers:
+1. Name: da0
+   Mediasize: 15664676864 (15G)
+   Sectorsize: 512
+   Mode: r0w0e0
+
+
+
+root@pnX:/home/pnmx # ntfs-3g /dev/da0s1 /mnt/
+
+
++------------- beeps off no X
+
+xset b off
+
++------------- listar discos
+# geom disk list
+
+# diskinfo -v ada1   (info do ada1)
+# gpart list ada1 	(info ada1)
+
+
+
+
++-------------+ localtime
+
+cp /usr/share/zoneinfo/Ameriac/Sao_Paulo /etc/localtime
+# tzsetup - script para alterar
+
+
++-------------timezone
+
+pnX[222] [~/]% date
+Wed Sep  9 18:50:00 -03 2020
+
+
++---------- habilitando itens no rc.conf
+som! :D
+
+sysrc dbus_enable=yes
+sysrc hald_enable=yes
+sysrc sound_load=yes
+sysrc snd_hda_load=yes
+sysrc snd_driver=yes
+
++----------- script de configuracao
+
+bsdinstall
+
++----------- habilitar root
+
+exemplo #pw user mod user -Ggrupo_wheel
+#pw user mod pnmx -Gwheel
+
++----------- utils geral
+pkg install NOME
+
+libreoffice - pacote office
+file-roller - zip, tar, etc... grafico
+vi - editor
+
++------ nvidia
+
+nvidia-driver-440.100          NVidia graphics card binary drivers for hardware OpenGL rendering
+nvidia-xconfig-440.100         Tool to manipulate X configuration files for the NVidia driver
+
+rodar o nvidia-xconfig para criar novo /etc/X11/xorg.conf
+$ cat /etc/rc.conf
+sendmail_enable="NONE"
+hostname="pnX"
+keymap="br.kbd"
+# Set dumpdev to "AUTO" to enable crash dumps, "NO" to disable
+dumpdev="AUTO"
+ifconfig_em0="DHCP"
+dbus_enable="yes"
+hald_enable="yes"
+suond_load="yes"
+snd_hda_load="yes"
+kld_list="linux nvidia nvidia-modeset coretemp"
+snd_driver="yes"
+
+
+# apesar de soh ter feito no rc.conf, recomendam:
+# vi /boot/loader.conf
+# coretemp = temperaura via sysctl em processador intel.
+# coretemp_load="YES"  ou amdtemp_load="YES"
+# sysctl -a | grep -i temperature
+#
+
+
+
+sysctl -a | grep temperature
+
++------ som pelo painel
+pkg install xfce4-pulseaudio-plugin-0.4.3 
+
+
++--------- teclado 
+
+pnmx@pnX:~ % cat /etc/X11/xorg.conf
+# nvidia-xconfig: X configuration file generated by nvidia-xconfig
+# nvidia-xconfig:  version 440.100
+
+
+Section	"InputClass"
+	Identifier	"KeyboardDefaults"
+	MatchIsKeyboard	"on"
+	Option		"XkbLayout" "br"
+
+
+adicionar la! :D
+obs: KBDMAP para tty e SETXKBMAP para modo grafico.
+
+
++--------- terminal
+
+adicionar ao .cshrc
+>> chsh - opcoes do usuario, inclusive shell
+# chsh -s tcsh usuario
+(altera para tcsh)
+
+set prompt="%S%m%s[%h] [%~/]%# "
+adicionar prompt="%S%m%s[%h] [%~/]%# " ao .cshrc
+
+
++------------ FreeBSD repository
+
+pnX[61] [~/]% cat /etc/pkg/FreeBSD.conf 
+
+# $FreeBSD: releng/12.1/usr.sbin/pkg/FreeBSD.conf.quarterly 346780 2019-04-27 04:00:50Z cperciva $
+#
+# To disable this repository, instead of modifying or removing this file,
+# create a /usr/local/etc/pkg/repos/FreeBSD.conf file:
+#
+#   mkdir -p /usr/local/etc/pkg/repos
+#   echo "FreeBSD: { enabled: no }" > /usr/local/etc/pkg/repos/FreeBSD.conf
+#
+
+FreeBSD: {
+  url: "pkg+http://pkg.FreeBSD.org/${ABI}/quarterly",
+  mirror_type: "srv",
+  signature_type: "fingerprints",
+  fingerprints: "/usr/share/keys/pkg",
+  enabled: yes
+}
+
++------------- Desligar e resumir no XFCE4
+
+Criar o arquivo abaixo na pasta /usr/local/etc/polkit-1/rules.d
+
+root@pnX:/usr/local/etc/polkit-1/rules.d # cat desliga.rules 
+polkit.addRule(function (action, subject) {
+  if ((action.id == "org.freedesktop.consolekit.system.restart" ||
+      action.id == "org.freedesktop.consolekit.system.stop")
+      && subject.isInGroup("wheel")) {
+    return polkit.Result.YES;
+  }
+});
+
+polkit.addRule(function (action, subject) {
+  if (action.id == "org.freedesktop.consolekit.system.suspend"
+      && subject.isInGroup("PUTYOURGROUPHERE")) {
+    return polkit.Result.YES;
+  }
+});
+
+
+informacao obtida em 
+# pkg info -D xfce4-session
+
++-------------- Usando tecla delete e outros atalhos:
+
+atualizar no .cshrc
+
+if ( $?tcsh ) then
+		bindkey "^W" backward-delete-word
+		bindkey -k up history-search-backward
+		bindkey -k down history-search-forward
+		bindkey "^[[3~" delete-char
+	endif
+
+
++------------  pasta cache pkg
+/var/cache/pkg
+
+root@pnX:/var/cache/pkg # grep -i cache /usr/local/etc/pkg.conf
+#PKG_CACHEDIR = "/var/cache/pkg";
+
+
+
++-------- corrigindo TOCTOU bug
+
+1) To update your vulnerable system via a binary patch:
+
+Systems running a RELEASE version of FreeBSD on the i386 or amd64
+platforms can be updated via the freebsd-update(8) utility:
+
+# freebsd-update fetch
+# freebsd-update install
+# shutdown -r +10min "Rebooting for a security update"
+
+2) To update your vulnerable system via a source code patch:
+
+The following patches have been verified to apply to the applicable
+FreeBSD release branches.
+
+a) Download the relevant patch from the location below, and verify the
+detached PGP signature using your PGP utility.
+
+# fetch https://security.FreeBSD.org/patches/SA-20:23/sendmsg.patch
+# fetch https://security.FreeBSD.org/patches/SA-20:23/sendmsg.patch.asc
+# gpg --verify sendmsg.patch.asc
+
+b) Apply the patch.  Execute the following commands as root:
+
+# cd /usr/src
+# patch < /path/to/patch
+
+c) Recompile your kernel as described in
+<URL:https://www.FreeBSD.org/handbook/kernelconfig.html> and reboot the
+system.
+
++------------------------------------------------------------

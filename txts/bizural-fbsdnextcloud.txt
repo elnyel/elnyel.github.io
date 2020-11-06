@@ -1,0 +1,103 @@
+nextcloud fbsd
+------------------------------
+
+pkg install apache24
+pkg install mariadb105-server-10.5.5 mariadb-client-10.5.5
+root@fbsdnovo1:/usr/local/www/apache24/data # pkg install mod_php74-7.4.11
+root@fbsdnovo1:/usr/local/www/apache24/data # pkg install php74-7.4.11
+root@fbsdnovo1:/usr/local/www/apache24/data # cp /usr/local/etc/php.ini-development /usr/local/etc/php.ini
+
+I----- ALTERACOES NO HTTPD.CONF -----I
+LOCAL: /usr/local/www/apache24/data # 
+
+make sure that the line to load the php7_module did exist, and add the  AddType below:
+
+LoadModule php7_module libexec/apache24/libphp7.so
+AddType application/x-httpd-php .php
+<IfModule dir_module>   DirectoryIndex index.php index.html</IfModule>
+
+
+adicionar no final do httpd.conf
+
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+<FilesMatch "\.phps$">
+    SetHandler application/x-httpd-php-source
+</FilesMatch>
+
+i-i-i-i-i-i-i-i-i-i-i-i-i-i-ii-i-i-
+
+
+
+rodar /usr/local/bin/mysql_secure_installation
+
+
+root@fbsdnovo1:/usr/local/www/apache24/data # pkg install nextcloud-php74-19.0.3
+Updating FreeBSD repository catalogue...
+FreeBSD repository is up to date.
+All repositories are up to date.
+The following 46 package(s) will be affected (of 0 checked):
+
+New packages to be INSTALLED:
+        fontconfig: 2.13.92_2,1
+        freetype2: 2.10.2_1
+        giflib: 5.2.1
+        gmp: 6.2.0
+        jbigkit: 2.1_1
+        jpeg-turbo: 2.0.4
+        libgcrypt: 1.8.5
+        libgd: 2.3.0,1
+        libgpg-error: 1.39
+        libxslt: 1.1.34_1
+        libzip: 1.5.2
+        nextcloud-php74: 19.0.3
+        oniguruma: 6.9.5.r1_1
+        openldap-client: 2.4.51
+        php74-bcmath: 7.4.11
+        php74-bz2: 7.4.11
+        php74-ctype: 7.4.11
+        php74-curl: 7.4.11
+        php74-dom: 7.4.11
+        php74-exif: 7.4.11
+        php74-fileinfo: 7.4.11
+        php74-filter: 7.4.11
+        php74-gd: 7.4.11
+        php74-gmp: 7.4.11
+        php74-iconv: 7.4.11
+        php74-intl: 7.4.11
+        php74-json: 7.4.11
+        php74-ldap: 7.4.11
+        php74-mbstring: 7.4.11
+        php74-opcache: 7.4.11
+        php74-openssl: 7.4.11
+        php74-pdo: 7.4.11
+        php74-pdo_mysql: 7.4.11
+        php74-pecl-APCu: 5.1.18
+        php74-posix: 7.4.11
+        php74-session: 7.4.11
+        php74-simplexml: 7.4.11
+        php74-xml: 7.4.11
+        php74-xmlreader: 7.4.11
+        php74-xmlwriter: 7.4.11
+        php74-xsl: 7.4.11
+        php74-zip: 7.4.11
+
+
+---------- alteracoes no httpd.conF
+
+ Alias /nextcloud /usr/local/www/nextcloud
+        AcceptPathInfo On
+        <Directory /usr/local/www/nextcloud>
+            AllowOverride All
+            Require all granted
+        </Directory>
+
+
+----------- ALTERACOES NO BD
+# mysql
+root@localhost [(none)]> CREATE USER 'nextclouduser'@'localhost' IDENTIFIED BY '123456_SENHA';
+root@localhost [(none)]> CREATE DATABASE IF NOT EXISTS nextcloud; 
+root@localhost [(none)]> GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextclouduser'@'localhost' IDENTIFIED BY '123456_SENHA';
+
+obs: no nextcloud usar 127.0.0.1 para configuracao inicial
